@@ -12,47 +12,59 @@ namespace JetBlack.Network.RxSocketProtocol
 {
     public static class FrameProtocolExtensions
     {
-        public static ISubject<DisposableValue<ArraySegment<byte>>, DisposableValue<ArraySegment<byte>>> ToFrameClientSubject(this Socket socket, SocketFlags socketFlags, BufferManager bufferManager,IFrameDecoder decoder, CancellationToken token)
+        public static ISubject<DisposableValue<ArraySegment<byte>>, DisposableValue<ArraySegment<byte>>>
+            ToFrameClientSubject(this Socket socket, ISimpleFrameEncoder encoder, ISimpleFrameDecoder decoder,
+                BufferManager bufferManager, CancellationToken token)
         {
-            return Subject.Create(socket.ToFrameClientObserver(socketFlags, token), socket.ToFrameClientObservable(socketFlags, bufferManager,decoder));
+            return Subject.Create(socket.ToFrameClientObserver(encoder, token),
+                socket.ToFrameClientObservable(bufferManager, decoder));
         }
-        
-        public static IObservable<DisposableValue<ArraySegment<byte>>> ToFrameClientObservable(this Socket socket, SocketFlags socketFlags, BufferManager bufferManager,IFrameDecoder decoder)
+
+        public static IObservable<DisposableValue<ArraySegment<byte>>> ToFrameClientObservable(this Socket socket,
+            BufferManager bufferManager, ISimpleFrameDecoder decoder)
         {
             return Observable.Create<DisposableValue<ArraySegment<byte>>>(async (observer, token) =>
             {
                 try
                 {
-                    var leftoverCount = 0;
+                    var state = decoder.InitState();
                     byte[] leftoverBuf = null;
+                    int leftoverCount = 0; //rider suggestion is buggy: this variable must declare outside the loop in the case when receive length is zero
                     while (!token.IsCancellationRequested)
                     {
                         byte[] bufferArray;
-                        var bufferStart = 0;
+                        int startIdx;
                         if (leftoverBuf != null)
                         {
                             bufferArray = leftoverBuf;
-                            bufferStart = leftoverCount;
+                            startIdx = leftoverCount;
                             leftoverBuf = null;
-                            leftoverCount = 0;
+                            //leftoverCount = 0;
                         }
                         else
                         {
                             bufferArray = bufferManager.TakeBuffer(decoder.BufferSize);
-                            bufferStart = 0;
-
+                            startIdx = 0;
                         }
-                        var pair = await socket.ReceiveCompletelyAsync(bufferArray,bufferStart, decoder, socketFlags, token);
+                        var pair = await socket.ReceiveCompletelyAsync(state, bufferArray, startIdx, decoder, token);
                         var receiveLen = pair.Item1;
                         leftoverCount = pair.Item2;
-                        if (receiveLen == 0)//no data received, and leftoverCount should be zero
+                        if (receiveLen == 0) //no data received, and leftoverCount should be zero
                         {
-                            //keep last received data
-                            leftoverBuf = bufferArray;
-                            leftoverCount = bufferStart;
-                            continue;
+                            if (decoder.CheckDropFrame(state, bufferArray, startIdx))
+                            {
+                                //reclaim buffer array
+                                bufferManager.ReturnBuffer(bufferArray);
+                            }
+                            else
+                            {
+                                //keep last received data
+                                leftoverBuf = bufferArray;
+                                leftoverCount = startIdx;
+                                continue;
+                            }
                         }
-                        if (receiveLen == -1)//overflow
+                        if (receiveLen == -1) //overflow
                         {
                             //reclaim buffer array
                             bufferManager.ReturnBuffer(bufferArray);
@@ -65,9 +77,8 @@ namespace JetBlack.Network.RxSocketProtocol
                             Buffer.BlockCopy(bufferArray, receiveLen, leftoverBuf, 0, leftoverCount);
                         }
 
-                        var buffer=new ArraySegment<byte>(bufferArray,0,receiveLen);
                         observer.OnNext(
-                            new DisposableValue<ArraySegment<byte>>(buffer,
+                            new DisposableValue<ArraySegment<byte>>(new ArraySegment<byte>(bufferArray, 0, receiveLen),
                                 Disposable.Create(() => bufferManager.ReturnBuffer(bufferArray))));
                     }
 
@@ -82,18 +93,14 @@ namespace JetBlack.Network.RxSocketProtocol
             });
         }
 
-        public static IObserver<DisposableValue<ArraySegment<byte>>> ToFrameClientObserver(this Socket socket, SocketFlags socketFlags, CancellationToken token)
+        public static IObserver<DisposableValue<ArraySegment<byte>>> ToFrameClientObserver(this Socket socket,
+            ISimpleFrameEncoder encoder, CancellationToken token)
         {
             return Observer.Create<DisposableValue<ArraySegment<byte>>>(async disposableBuffer =>
             {
-                //var headerBuffer = BitConverter.GetBytes(disposableBuffer.Value.Count);
                 await socket.SendCompletelyAsync(
-                    new[]
-                    {
-                        new ArraySegment<byte>(headerBuffer, 0, headerBuffer.Length),
-                        new ArraySegment<byte>(disposableBuffer.Value.Array, 0, disposableBuffer.Value.Count)
-                    },
-                    SocketFlags.None,
+                    encoder.EncoderSendFrame(disposableBuffer.Value),
+                    encoder.SendFlags, //SocketFlags.None,
                     token);
             });
         }
