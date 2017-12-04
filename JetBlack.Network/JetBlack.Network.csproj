@@ -51,6 +51,8 @@
     <Compile Include="Common\SocketEx.cs" />
     <Compile Include="Common\TaskExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RxSocketProtocol\FrameProtocol.cs" />
+    <Compile Include="RxSocketProtocol\FrameProtocolExtensions.cs" />
     <Compile Include="RxSocketSelect\ConnectExtensions.cs" />
     <Compile Include="RxSocketSelect\Sockets\BufferState.cs" />
     <Compile Include="RxSocketSelect\Sockets\Checkable.cs" />

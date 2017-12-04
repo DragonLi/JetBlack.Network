@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace JetBlack.Network.Common
 {
-    public static class SocketExtensions
+    public static partial class SocketExtensions
     {
         public static async Task<Socket> AcceptAsync(this Socket socket)
         {
