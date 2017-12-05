@@ -61,6 +61,7 @@ namespace RxSocketProtocol.EchoClient
         public ArraySegment<byte> BuildFrame(object state,byte[] bufferArray, int startInd, int receiveLen,int leftoverCount)
         {
             if (!(state is LengthBytesState lengthState)) throw new ArgumentException("incorrect state object");
+            //reset state
             lengthState.length = -1;
             lengthState.received = 0;
             //skip header

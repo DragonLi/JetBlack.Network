@@ -33,7 +33,9 @@ namespace JetBlack.Examples.RxSocket.EchoClient
                             .Subscribe(
                                 managedBuffer =>
                                 {
-                                    Console.WriteLine("Read: " + Encoding.UTF8.GetString(managedBuffer.Value.Array, 0, managedBuffer.Value.Count));
+                                    var buf = managedBuffer.Value;
+                                    if (buf.Array != null)
+                                    Console.WriteLine("Read: " + Encoding.UTF8.GetString(buf.Array, buf.Offset, buf.Count));
                                     managedBuffer.Dispose();
                                 },
                                 error => Console.WriteLine("Error: " + error.Message),
@@ -48,8 +50,8 @@ namespace JetBlack.Examples.RxSocket.EchoClient
                             },
                             error => Console.WriteLine("Error: " + error.Message),
                             () => Console.WriteLine("OnCompleted: LineReader"));
-
-                    Thread.Sleep(10*1000);
+                    cts.Token.WaitHandle.WaitOne();
+                    //Thread.Sleep(10*1000);
                     observerDisposable.Dispose();
 
                     cts.Cancel();
