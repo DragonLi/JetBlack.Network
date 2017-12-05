@@ -38,7 +38,7 @@ namespace RxSocketProtocol.EchoClient
                                         var segment = managedBuffer.Value;
                                         if (segment.Array != null)
                                             Console.WriteLine(
-                                                "Read: " + Encoding.UTF8.GetString(segment.Array, segment.Offset,
+                                                "Echo: " + Encoding.UTF8.GetString(segment.Array, segment.Offset,
                                                     segment.Count));
                                         managedBuffer.Dispose();
                                     },
@@ -74,10 +74,12 @@ namespace RxSocketProtocol.EchoClient
 
                         cts.Token.WaitHandle.WaitOne();
                         observerDisposable.Dispose();
-
-                        
                     }, 
-                    error => Console.WriteLine("Failed to connect: " + error.Message),
+                    error =>
+                    {
+                        Console.WriteLine("Failed to connect: " + error.Message);
+                        cts.Cancel();
+                    },
                     cts.Token);
 
             cts.Token.WaitHandle.WaitOne();
