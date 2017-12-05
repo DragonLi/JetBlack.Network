@@ -49,6 +49,7 @@ namespace JetBlack.Examples.RxSocket.EchoClient
                             error => Console.WriteLine("Error: " + error.Message),
                             () => Console.WriteLine("OnCompleted: LineReader"));
 
+                    Thread.Sleep(10*1000);
                     observerDisposable.Dispose();
 
                     cts.Cancel();

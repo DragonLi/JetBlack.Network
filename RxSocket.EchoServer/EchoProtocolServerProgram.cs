@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RxSocketProtocol.EchoClient
+namespace RxSocket.EchoServer
 {
-    internal class Program
+    internal class EchoProtocolServerProgram
     {
         public static void Main(string[] args)
         {

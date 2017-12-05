@@ -7,14 +7,37 @@ using JetBlack.Network.RxSocketProtocol;
 
 namespace JetBlack.Network.RxSocketProtocol
 {
+    //TODO multi frame protocol support
     public interface ISimpleFrameDecoder
     {
-        int BufferSize { get; }
-        int LookupSize(object state);
         SocketFlags ReceivedFlags { get; }
-        (bool, int) CheckFinished(object state, byte[] buffer, int startIdx, int received);
-        bool CheckDropFrame(object state, byte[] bufferArray, int leftoverCount);
+
+        int BufferSize { get; }
+
         object InitState();
+
+        int LookupSize(object state);
+
+        /// <summary>
+        /// check whether a frame is received completely, and whether next frame's data is received
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="buffer"></param>
+        /// <param name="startIdx"></param>
+        /// <param name="received"></param>
+        /// <returns>flag a frame is complete, and leftover data counts for the next frame</returns>
+        (bool, int) CheckFinished(object state, byte[] buffer, int startIdx, int received);
+
+        DropFrameStrategyEnum CheckDropFrame(object state, byte[] bufferArray, int leftoverCount);
+
+        ArraySegment<byte> BuildFrame(object state,byte[] bufferArray, int startInd, int receiveLen,int leftoverCount);
+    }
+
+    public enum DropFrameStrategyEnum
+    {
+        DropAndRestart,
+        DropAndClose,
+        KeepAndContinue,
     }
 
     public interface ISimpleFrameEncoder
@@ -43,13 +66,16 @@ namespace JetBlack.Network.Common
         {
             var received = 0;
             var leftover = 0;
-            var lookupZise = decoder.LookupSize(state);
             var stopReceive = false;
             var socketFlags = decoder.ReceivedFlags;
             while (!stopReceive)
             {
                 token.ThrowIfCancellationRequested();
 
+                if (startIdx + received >= buffer.Length) //overflow checking
+                    return (-1, 0);
+
+                var lookupZise = decoder.LookupSize(state);
                 var bytes = await socket.ReceiveAsync(buffer, startIdx + received, lookupZise, socketFlags);
                 if (bytes == 0)
                 {

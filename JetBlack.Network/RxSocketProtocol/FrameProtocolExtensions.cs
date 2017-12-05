@@ -51,20 +51,27 @@ namespace JetBlack.Network.RxSocketProtocol
                         leftoverCount = pair.Item2;
                         if (receiveLen == 0) //no data received, and leftoverCount should be zero
                         {
-                            if (decoder.CheckDropFrame(state, bufferArray, startIdx))
+                            var dropFrameStrategy = decoder.CheckDropFrame(state, bufferArray, startIdx);
+                            switch (dropFrameStrategy)
                             {
-                                //reclaim buffer array
-                                bufferManager.ReturnBuffer(bufferArray);
+                                case DropFrameStrategyEnum.DropAndRestart:
+                                    //reclaim buffer array
+                                    bufferManager.ReturnBuffer(bufferArray);
+                                    continue;
+                                case DropFrameStrategyEnum.DropAndClose:
+                                    //reclaim buffer array
+                                    bufferManager.ReturnBuffer(bufferArray);
+                                    break;
+                                case DropFrameStrategyEnum.KeepAndContinue:
+                                    //keep last received data
+                                    leftoverBuf = bufferArray;
+                                    leftoverCount = startIdx;
+                                    continue;
                             }
-                            else
-                            {
-                                //keep last received data
-                                leftoverBuf = bufferArray;
-                                leftoverCount = startIdx;
-                                continue;
-                            }
+                            if (dropFrameStrategy == DropFrameStrategyEnum.DropAndClose)
+                                break;
                         }
-                        if (receiveLen == -1) //overflow
+                        if (receiveLen == -1) //overflow,TODO support extensible frame in future
                         {
                             //reclaim buffer array
                             bufferManager.ReturnBuffer(bufferArray);
@@ -77,8 +84,9 @@ namespace JetBlack.Network.RxSocketProtocol
                             Buffer.BlockCopy(bufferArray, receiveLen, leftoverBuf, 0, leftoverCount);
                         }
 
+                        var arraySegment = decoder.BuildFrame(state,bufferArray, 0, receiveLen,leftoverCount);
                         observer.OnNext(
-                            new DisposableValue<ArraySegment<byte>>(new ArraySegment<byte>(bufferArray, 0, receiveLen),
+                            new DisposableValue<ArraySegment<byte>>(arraySegment,
                                 Disposable.Create(() => bufferManager.ReturnBuffer(bufferArray))));
                     }
 
