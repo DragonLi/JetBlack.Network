@@ -42,23 +42,40 @@ namespace RxSocketProtocol.EchoClient
                                                     segment.Count));
                                         managedBuffer.Dispose();
                                     },
-                                    error => Console.WriteLine("Error: " + error.Message),
-                                    () => Console.WriteLine("OnCompleted: Frame Protocol Receiver"));
+                                    error =>
+                                    {
+                                        Console.WriteLine("Error: " + error.Message);
+                                        cts.Cancel();
+                                    },
+                                    () =>
+                                    {
+                                        Console.WriteLine("OnCompleted: Frame Protocol Receiver");
+                                        cts.Cancel();
+                                    });
 
-                        Console.In.ToLineObservable()
+                        Console.In.ToLineObservable("exit")
                             .Subscribe(
                                 line =>
                                 {
+                                    if (string.IsNullOrEmpty(line)) return;
                                     var writeBuffer = Encoding.UTF8.GetBytes(line);
                                     frameClientSubject.OnNext(DisposableValue.Create(new ArraySegment<byte>(writeBuffer), Disposable.Empty));
                                 },
-                                error => Console.WriteLine("Error: " + error.Message),
-                                () => Console.WriteLine("OnCompleted: LineReader"));
+                                error =>
+                                {                                    
+                                    Console.WriteLine("Error: " + error.Message);
+                                    cts.Cancel();
+                                },
+                                () =>
+                                {
+                                    Console.WriteLine("OnCompleted: LineReader");
+                                    cts.Cancel();
+                                });
 
-                        Thread.Sleep(300*1000);
+                        cts.Token.WaitHandle.WaitOne();
                         observerDisposable.Dispose();
 
-                        cts.Cancel();
+                        
                     }, 
                     error => Console.WriteLine("Failed to connect: " + error.Message),
                     cts.Token);

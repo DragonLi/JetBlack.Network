@@ -6,8 +6,9 @@ namespace JetBlack.Examples.Common
 {
     public static class TextReaderExtensions
     {
-        public static IObservable<string> ToLineObservable(this TextReader reader)
+        public static IObservable<string> ToLineObservable(this TextReader reader,string exitStr=null)
         {
+            if (exitStr == null) exitStr= string.Empty;
             return Observable.Create<string>(async (observer, token) =>
             {
                 try
@@ -15,7 +16,7 @@ namespace JetBlack.Examples.Common
                     while (!token.IsCancellationRequested)
                     {
                         var line = await reader.ReadLineAsync();
-                        if (string.IsNullOrEmpty(line))
+                        if (line.Equals(exitStr))
                             break;
 
                         observer.OnNext(line);
