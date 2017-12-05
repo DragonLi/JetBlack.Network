@@ -27,7 +27,7 @@ namespace JetBlack.Network.RxSocketProtocol
         /// <returns>flag a frame is complete, and leftover data counts for the next frame</returns>
         (bool, int) CheckFinished(object state, byte[] buffer, int received);
 
-        ArraySegment<byte> BuildFrame(object state,byte[] bufferArray, int receiveLen,int leftoverCount);
+        ArraySegment<byte> BuildFrame(object state, byte[] bufferArray, int receiveLen, int leftoverCount);
 
         DropFrameStrategyEnum CheckDropFrame(object state, byte[] bufferArray, int leftoverCount);
     }
@@ -37,6 +37,37 @@ namespace JetBlack.Network.RxSocketProtocol
         DropAndClose,
         KeepAndContinue,
         DropAndRestart,
+    }
+
+    public abstract class AbsSimpleDecoder : ISimpleFrameDecoder
+    {
+        public abstract SocketFlags ReceivedFlags { get; }
+        public abstract int BufferSize { get; }
+        public abstract object InitState();
+        public abstract int LookupSize(object state);
+        public abstract (bool, int) CheckFinished(object state, byte[] buffer, int received);
+
+        protected abstract ArraySegment<byte> BuildFrameImpl(object state, byte[] bufferArray, int receiveLen,
+            int leftoverCount);
+
+        protected abstract void ResetState(object state);
+
+        public ArraySegment<byte> BuildFrame(object state, byte[] bufferArray, int receiveLen, int leftoverCount)
+        {
+            try
+            {
+                return BuildFrameImpl(state, bufferArray, receiveLen, leftoverCount);
+            }
+            finally
+            {
+                ResetState(state);
+            }
+        }
+
+        public DropFrameStrategyEnum CheckDropFrame(object state, byte[] bufferArray, int leftoverCount)
+        {
+            return DropFrameStrategyEnum.DropAndClose;
+        }
     }
 
     public interface ISimpleFrameEncoder
@@ -67,7 +98,7 @@ namespace JetBlack.Network.Common
             var leftover = 0;
             var stopReceive = false;
             var socketFlags = decoder.ReceivedFlags;
-            
+
             //check left over buffer
             if (startIdx > 0)
                 (stopReceive, leftover) = decoder.CheckFinished(state, buffer, startIdx);
@@ -83,13 +114,13 @@ namespace JetBlack.Network.Common
                 var bytes = await socket.ReceiveAsync(buffer, startIdx + received, lookupZise, socketFlags);
                 if (bytes == 0)
                 {
-                    return (received, leftover);
+                    return (startIdx + received, leftover);
                 }
                 received += bytes;
                 (stopReceive, leftover) = decoder.CheckFinished(state, buffer, startIdx + received);
             }
 
-            return (received, leftover);
+            return (startIdx + received, leftover);
         }
     }
 }

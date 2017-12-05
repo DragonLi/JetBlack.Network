@@ -5,14 +5,14 @@ using JetBlack.Network.RxSocketProtocol;
 
 namespace RxSocketProtocol.EchoClient
 {
-    public class EchoProtocolDecoder : ISimpleFrameDecoder
+    public class EchoProtocolDecoder : AbsSimpleDecoder
     {
         private const int HeaderSize = sizeof(int);
-        public SocketFlags ReceivedFlags => SocketFlags.None;
-        
-        public int BufferSize => 2 << 8;
-        
-        public int LookupSize(object state)
+        public override SocketFlags ReceivedFlags => SocketFlags.None;
+
+        public override int BufferSize => 2 << 8;
+
+        public override int LookupSize(object state)
         {
             if (!(state is LengthBytesState lengthState)) throw new ArgumentException("incorrect state object");
             if (lengthState.Length == -1)
@@ -21,18 +21,18 @@ namespace RxSocketProtocol.EchoClient
                 return HeaderSize + lengthState.Length - lengthState.Received;
         }
 
-        public object InitState()
+        public override object InitState()
         {
             return new LengthBytesState();
         }
 
-        public (bool, int) CheckFinished(object state, byte[] buffer, int received)
+        public override (bool, int) CheckFinished(object state, byte[] buffer, int received)
         {
             if (!(state is LengthBytesState lengthState)) throw new ArgumentException("incorrect state object");
 
             if (lengthState.Length == -1)
             {
-                if (received != HeaderSize) return (true, 0);//no header received, stop this frame
+                if (received != HeaderSize) return (true, 0); //no header received, stop this frame
                 //lookup length header
                 lengthState.Length = BitConverter.ToInt32(buffer, 0);
                 lengthState.Received = received;
@@ -40,34 +40,34 @@ namespace RxSocketProtocol.EchoClient
             }
             else
             {
-                if (lengthState.Length+HeaderSize < received)
+                if (lengthState.Length + HeaderSize < received)
                 {
-                    lengthState.Received = received;//data not complete,continue
+                    lengthState.Received = received; //data not complete,continue
                     return (false, 0);
                 }
                 else
                 {
-                    lengthState.Received = lengthState.Length+HeaderSize;//data completed,count the leftover,should be zero
-                    return (true, received - lengthState.Length-HeaderSize);
+                    lengthState.Received =
+                        lengthState.Length + HeaderSize; //data completed,count the leftover,should be zero
+                    return (true, received - lengthState.Length - HeaderSize);
                 }
             }
         }
 
-        public DropFrameStrategyEnum CheckDropFrame(object state, byte[] bufferArray, int leftoverCount)
+        protected override ArraySegment<byte> BuildFrameImpl(object state, byte[] bufferArray, int receiveLen,
+            int leftoverCount)
         {
-            return DropFrameStrategyEnum.DropAndClose;
+            //skip header
+            return receiveLen <= HeaderSize
+                ? new ArraySegment<byte>(bufferArray, 0, 0)
+                : new ArraySegment<byte>(bufferArray, HeaderSize, receiveLen - leftoverCount - HeaderSize);
         }
 
-        public ArraySegment<byte> BuildFrame(object state,byte[] bufferArray, int receiveLen,int leftoverCount)
+        protected override void ResetState(object state)
         {
             if (!(state is LengthBytesState lengthState)) throw new ArgumentException("incorrect state object");
-            //reset state
             lengthState.Length = -1;
             lengthState.Received = 0;
-            //skip header
-            return receiveLen <= HeaderSize ? 
-                new ArraySegment<byte>(bufferArray, 0, 0) : 
-                new ArraySegment<byte>(bufferArray,HeaderSize,receiveLen-HeaderSize);
         }
 
         private class LengthBytesState
@@ -76,7 +76,7 @@ namespace RxSocketProtocol.EchoClient
             public int Received;
         }
     }
-    
+
     public class EchoProtocolEncoder : ISimpleFrameEncoder
     {
         public IList<ArraySegment<byte>> EncoderSendFrame(ArraySegment<byte> data)

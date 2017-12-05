@@ -80,7 +80,7 @@ namespace JetBlack.Network.RxSocketProtocol
                         if (leftoverCount > 0)
                         {
                             leftoverBuf = bufferManager.TakeBuffer(decoder.BufferSize);
-                            Buffer.BlockCopy(bufferArray, receiveLen, leftoverBuf, 0, leftoverCount);
+                            Buffer.BlockCopy(bufferArray, receiveLen - leftoverCount, leftoverBuf, 0, leftoverCount);
                         }
 
                         var arraySegment = decoder.BuildFrame(state,bufferArray, receiveLen,leftoverCount);
