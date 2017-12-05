@@ -28,16 +28,16 @@ namespace JetBlack.Network.RxSocketProtocol
         /// <returns>flag a frame is complete, and leftover data counts for the next frame</returns>
         (bool, int) CheckFinished(object state, byte[] buffer, int startIdx, int received);
 
-        DropFrameStrategyEnum CheckDropFrame(object state, byte[] bufferArray, int leftoverCount);
-
         ArraySegment<byte> BuildFrame(object state,byte[] bufferArray, int startInd, int receiveLen,int leftoverCount);
+
+        DropFrameStrategyEnum CheckDropFrame(object state, byte[] bufferArray, int leftoverCount);
     }
 
     public enum DropFrameStrategyEnum
     {
-        DropAndRestart,
         DropAndClose,
         KeepAndContinue,
+        DropAndRestart,
     }
 
     public interface ISimpleFrameEncoder
@@ -68,6 +68,11 @@ namespace JetBlack.Network.Common
             var leftover = 0;
             var stopReceive = false;
             var socketFlags = decoder.ReceivedFlags;
+            
+            //check left over buffer
+            if (startIdx > 0)
+                (stopReceive, leftover) = decoder.CheckFinished(state, buffer, 0, startIdx);
+
             while (!stopReceive)
             {
                 token.ThrowIfCancellationRequested();

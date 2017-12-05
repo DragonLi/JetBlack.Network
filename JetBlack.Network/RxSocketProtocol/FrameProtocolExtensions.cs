@@ -39,7 +39,6 @@ namespace JetBlack.Network.RxSocketProtocol
                             bufferArray = leftoverBuf;
                             startIdx = leftoverCount;
                             leftoverBuf = null;
-                            //leftoverCount = 0;
                         }
                         else
                         {
@@ -54,14 +53,14 @@ namespace JetBlack.Network.RxSocketProtocol
                             var dropFrameStrategy = decoder.CheckDropFrame(state, bufferArray, startIdx);
                             switch (dropFrameStrategy)
                             {
-                                case DropFrameStrategyEnum.DropAndRestart:
-                                    //reclaim buffer array
-                                    bufferManager.ReturnBuffer(bufferArray);
-                                    continue;
                                 case DropFrameStrategyEnum.DropAndClose:
                                     //reclaim buffer array
                                     bufferManager.ReturnBuffer(bufferArray);
                                     break;
+                                case DropFrameStrategyEnum.DropAndRestart:
+                                    //reclaim buffer array
+                                    bufferManager.ReturnBuffer(bufferArray);
+                                    continue;
                                 case DropFrameStrategyEnum.KeepAndContinue:
                                     //keep last received data
                                     leftoverBuf = bufferArray;
