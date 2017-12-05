@@ -5,11 +5,11 @@ using JetBlack.Network.RxSocketProtocol;
 
 namespace BrainDeviceProtocol
 {
-    public class ClientFrameDecoder:AbsSimpleDecoder
+    public class ClientFrameDecoder : AbsSimpleDecoder
     {
         public override SocketFlags ReceivedFlags => SocketFlags.None;
         public override int BufferSize => 1024;
-        
+
         private readonly byte FrameHeader;
         private readonly byte FrameTail;
 
@@ -33,7 +33,7 @@ namespace BrainDeviceProtocol
         {
             if (received <= 2) return (false, 0);
             if (!(state is FrameDecodeState frameState)) throw new ArgumentException("incorrect state object");
-            
+
             if (frameState.CommandId == -1)
             {
                 var header = buffer[0];
@@ -56,17 +56,18 @@ namespace BrainDeviceProtocol
             return (false, 0);
         }
 
-        protected override ArraySegment<byte> BuildFrameImpl(object state, byte[] buffer, int receiveLen, int leftoverCount)
+        protected override ArraySegment<byte> BuildFrameImpl(object state, byte[] buffer, int receiveLen,
+            int leftoverCount)
         {
             //skip incorrect frame data
             if (receiveLen <= 2) return new ArraySegment<byte>(buffer, 0, 0);
             if (FrameHeader != buffer[0]) return new ArraySegment<byte>(buffer, 0, 0);
             if (buffer[1] <= 0) return new ArraySegment<byte>(buffer, 0, 0);
-            var frameEndIdx = receiveLen - leftoverCount -1;
+            var frameEndIdx = receiveLen - leftoverCount - 1;
             if (FrameTail != buffer[frameEndIdx]) return new ArraySegment<byte>(buffer, 0, 0);
-            
+
             if (!(state is FrameDecodeState frameState)) throw new ArgumentException("incorrect state object");
-            if (frameEndIdx != frameState.LastCheckCount-1) throw new ArgumentException("incorrect state object");
+            if (frameEndIdx != frameState.LastCheckCount - 1) throw new ArgumentException("incorrect state object");
             if (frameState.CommandId < 0) throw new ArgumentException("incorrect state object");
 
             return new ArraySegment<byte>(buffer, 1, frameEndIdx - 1);
@@ -98,9 +99,9 @@ namespace BrainDeviceProtocol
             FrameHeader = frameHeader;
             FrameTail = frameTail;
             var buf = new byte[] {FrameHeader};
-            FrameHeaderSeg=new ArraySegment<byte>(buf,0,1);
+            FrameHeaderSeg = new ArraySegment<byte>(buf, 0, 1);
             buf = new byte[] {FrameTail};
-            FrameTailSeg=new ArraySegment<byte>(buf,0,1);
+            FrameTailSeg = new ArraySegment<byte>(buf, 0, 1);
         }
 
         public IList<ArraySegment<byte>> EncoderSendFrame(ArraySegment<byte> data)
