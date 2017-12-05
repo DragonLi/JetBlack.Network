@@ -12,7 +12,7 @@ using JetBlack.Network.RxSocketProtocol;
 
 namespace RxSocketProtocol.EchoClient
 {
-    internal class EchoProtocolClientProgram
+    internal static class EchoProtocolClientProgram
     {
         public static void Main(string[] args)
         {
