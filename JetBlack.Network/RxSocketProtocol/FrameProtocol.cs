@@ -23,12 +23,11 @@ namespace JetBlack.Network.RxSocketProtocol
         /// </summary>
         /// <param name="state"></param>
         /// <param name="buffer"></param>
-        /// <param name="startIdx"></param>
         /// <param name="received"></param>
         /// <returns>flag a frame is complete, and leftover data counts for the next frame</returns>
-        (bool, int) CheckFinished(object state, byte[] buffer, int startIdx, int received);
+        (bool, int) CheckFinished(object state, byte[] buffer, int received);
 
-        ArraySegment<byte> BuildFrame(object state,byte[] bufferArray, int startInd, int receiveLen,int leftoverCount);
+        ArraySegment<byte> BuildFrame(object state,byte[] bufferArray, int receiveLen,int leftoverCount);
 
         DropFrameStrategyEnum CheckDropFrame(object state, byte[] bufferArray, int leftoverCount);
     }
@@ -71,7 +70,7 @@ namespace JetBlack.Network.Common
             
             //check left over buffer
             if (startIdx > 0)
-                (stopReceive, leftover) = decoder.CheckFinished(state, buffer, 0, startIdx);
+                (stopReceive, leftover) = decoder.CheckFinished(state, buffer, startIdx);
 
             while (!stopReceive)
             {
@@ -87,7 +86,7 @@ namespace JetBlack.Network.Common
                     return (received, leftover);
                 }
                 received += bytes;
-                (stopReceive, leftover) = decoder.CheckFinished(state, buffer, startIdx, received);
+                (stopReceive, leftover) = decoder.CheckFinished(state, buffer, startIdx + received);
             }
 
             return (received, leftover);

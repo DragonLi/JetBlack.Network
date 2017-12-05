@@ -15,10 +15,10 @@ namespace RxSocketProtocol.EchoClient
         public int LookupSize(object state)
         {
             if (!(state is LengthBytesState lengthState)) throw new ArgumentException("incorrect state object");
-            if (lengthState.length == -1)
+            if (lengthState.Length == -1)
                 return HeaderSize; //lookup length header
             else
-                return HeaderSize + lengthState.length - lengthState.received;
+                return HeaderSize + lengthState.Length - lengthState.Received;
         }
 
         public object InitState()
@@ -26,29 +26,29 @@ namespace RxSocketProtocol.EchoClient
             return new LengthBytesState();
         }
 
-        public (bool, int) CheckFinished(object state, byte[] buffer, int startIdx, int received)
+        public (bool, int) CheckFinished(object state, byte[] buffer, int received)
         {
             if (!(state is LengthBytesState lengthState)) throw new ArgumentException("incorrect state object");
 
-            if (lengthState.length == -1)
+            if (lengthState.Length == -1)
             {
                 if (received != HeaderSize) return (true, 0);//no header received, stop this frame
                 //lookup length header
-                lengthState.length = BitConverter.ToInt32(buffer, 0);
-                lengthState.received = received;
+                lengthState.Length = BitConverter.ToInt32(buffer, 0);
+                lengthState.Received = received;
                 return (false, 0);
             }
             else
             {
-                if (lengthState.length+HeaderSize < received)
+                if (lengthState.Length+HeaderSize < received)
                 {
-                    lengthState.received = received;//data not complete,continue
+                    lengthState.Received = received;//data not complete,continue
                     return (false, 0);
                 }
                 else
                 {
-                    lengthState.received = lengthState.length+HeaderSize;//data completed,count the leftover,should be zero
-                    return (true, received - lengthState.length-HeaderSize);
+                    lengthState.Received = lengthState.Length+HeaderSize;//data completed,count the leftover,should be zero
+                    return (true, received - lengthState.Length-HeaderSize);
                 }
             }
         }
@@ -58,22 +58,22 @@ namespace RxSocketProtocol.EchoClient
             return DropFrameStrategyEnum.DropAndClose;
         }
 
-        public ArraySegment<byte> BuildFrame(object state,byte[] bufferArray, int startInd, int receiveLen,int leftoverCount)
+        public ArraySegment<byte> BuildFrame(object state,byte[] bufferArray, int receiveLen,int leftoverCount)
         {
             if (!(state is LengthBytesState lengthState)) throw new ArgumentException("incorrect state object");
             //reset state
-            lengthState.length = -1;
-            lengthState.received = 0;
+            lengthState.Length = -1;
+            lengthState.Received = 0;
             //skip header
             return receiveLen <= HeaderSize ? 
-                new ArraySegment<byte>(bufferArray, startInd, 0) : 
-                new ArraySegment<byte>(bufferArray,startInd+HeaderSize,receiveLen-HeaderSize);
+                new ArraySegment<byte>(bufferArray, 0, 0) : 
+                new ArraySegment<byte>(bufferArray,HeaderSize,receiveLen-HeaderSize);
         }
 
         private class LengthBytesState
         {
-            public int length = -1;
-            public int received = 0;
+            public int Length = -1;
+            public int Received;
         }
     }
     
@@ -81,6 +81,7 @@ namespace RxSocketProtocol.EchoClient
     {
         public IList<ArraySegment<byte>> EncoderSendFrame(ArraySegment<byte> data)
         {
+            if (data.Array == null) throw new ArgumentException("ArraySegment contains no data");
             var headerBuffer = BitConverter.GetBytes(data.Count);
             return new[]
             {

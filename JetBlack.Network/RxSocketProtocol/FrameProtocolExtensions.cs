@@ -83,7 +83,7 @@ namespace JetBlack.Network.RxSocketProtocol
                             Buffer.BlockCopy(bufferArray, receiveLen, leftoverBuf, 0, leftoverCount);
                         }
 
-                        var arraySegment = decoder.BuildFrame(state,bufferArray, 0, receiveLen,leftoverCount);
+                        var arraySegment = decoder.BuildFrame(state,bufferArray, receiveLen,leftoverCount);
                         observer.OnNext(
                             new DisposableValue<ArraySegment<byte>>(arraySegment,
                                 Disposable.Create(() => bufferManager.ReturnBuffer(bufferArray))));
