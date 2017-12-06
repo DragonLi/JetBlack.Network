@@ -31,5 +31,15 @@ namespace BrainDeviceProtocol
             }
             return sb.ToString();
         }
+
+        public static string Show(this List<ArraySegment<byte>> data)
+        {
+            var sb = new StringBuilder();
+            for (var i = 0; i < data.Count; i++)
+            {
+                sb.Append(data[i].Show());
+            }
+            return sb.ToString();
+        }
     }
 }
