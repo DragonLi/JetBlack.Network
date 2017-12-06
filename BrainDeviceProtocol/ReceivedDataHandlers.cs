@@ -62,7 +62,77 @@ namespace BrainDeviceProtocol
 
             var startIdx = data.Offset;
             var flag = buf[startIdx + 1];
-            Console.WriteLine(flag.Show());
+            var success = flag == 0;
+            Console.WriteLine(success);
+        }
+    }
+    
+    public class SetTrapHandler : IReceivedDataProcessor
+    {
+        public byte FuncId => 12;
+
+        public void Process(ArraySegment<byte> data)
+        {
+            var count = data.Count;
+            var buf = data.Array;
+            const int leastLen = 1 + 1;
+            if (buf == null || count < leastLen)
+            {
+                AppLogger.Log("corruted sample data");
+                return;
+            }
+
+            var startIdx = data.Offset;
+            var flag = buf[startIdx + 1];
+            var success = flag == 0;
+            Console.WriteLine(success);
+        }
+    }
+    
+    public class SetFilterHandler : IReceivedDataProcessor
+    {
+        public byte FuncId => 13;
+
+        public void Process(ArraySegment<byte> data)
+        {
+            var count = data.Count;
+            var buf = data.Array;
+            const int leastLen = 1 + 1;
+            if (buf == null || count < leastLen)
+            {
+                AppLogger.Log("corruted sample data");
+                return;
+            }
+
+            var startIdx = data.Offset;
+            var flag = buf[startIdx + 1];
+            var success = flag == 0;
+            Console.WriteLine(success);
+        }
+    }
+    
+    public class QueryParamHandler : IReceivedDataProcessor
+    {
+        public byte FuncId => 21;
+
+        public void Process(ArraySegment<byte> data)
+        {
+            //TODO
+            /*
+            var count = data.Count;
+            var buf = data.Array;
+            const int leastLen = 1 + 1;
+            if (buf == null || count < leastLen)
+            {
+                AppLogger.Log("corruted sample data");
+                return;
+            }
+
+            var startIdx = data.Offset;
+            var flag = buf[startIdx + 1];
+            var success = flag == 0;
+            Console.WriteLine(success);
+            */
         }
     }
 }
