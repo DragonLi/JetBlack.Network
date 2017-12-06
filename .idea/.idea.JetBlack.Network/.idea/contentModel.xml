@@ -4,12 +4,19 @@
     <e p="$USER_HOME$/.Rider2017.2/system/resharper-host/local/Transient/ReSharperHost/v10/SolutionCaches/_JetBlack.Network.-1690963573.00" t="ExcludeRecursive" />
     <e p="$PROJECT_DIR$" t="IncludeFlat">
       <e p="BrainDeviceProtocol" t="IncludeRecursive">
+        <e p="AppLogger.cs" t="Include" />
         <e p="BrainDevProtocolTestProgram.cs" t="Include" />
         <e p="BrainDeviceClientProtocol.cs" t="Include" />
         <e p="BrainDeviceProtocol.csproj" t="IncludeRecursive" />
+        <e p="CommadContent.cs" t="Include" />
+        <e p="DevCommandSender.cs" t="Include" />
         <e p="Properties" t="Include">
           <e p="AssemblyInfo.cs" t="Include" />
         </e>
+        <e p="ReceivedDataHandlers.cs" t="Include" />
+        <e p="ReceivedDataProcessor.cs" t="Include" />
+        <e p="RecycleBuffer.cs" t="Include" />
+        <e p="ReflectionHelper.cs" t="Include" />
         <e p="Utility.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="obj" t="ExcludeRecursive" />

@@ -16,18 +16,19 @@ namespace BrainDeviceProtocol
     {
         public static void Main(string[] args)
         {
-                        var endpoint = ProgramArgs.Parse(args, new[] { "127.0.0.1:9211" }).EndPoint;
+            var endpoint = ProgramArgs.Parse(args, new[] {"127.0.0.1:9211"}).EndPoint;
 
             var cts = new CancellationTokenSource();
             var bufferManager = BufferManager.CreateBufferManager(2 << 16, 1024);
-            var encoder = new ClientFrameEncoder(0xA0,0XC0);
-            var decoder = new ClientFrameDecoder(0xA0,0XC0);
-            
+            var encoder = new ClientFrameEncoder(0xA0, 0XC0);
+            var decoder = new ClientFrameDecoder(0xA0, 0XC0);
+
             endpoint.ToConnectObservable()
                 .ObserveOn(TaskPoolScheduler.Default)
                 .Subscribe(socket =>
                     {
-                        var frameClientSubject = socket.ToFrameClientSubject(encoder,decoder, bufferManager, cts.Token);
+                        var frameClientSubject =
+                            socket.ToFrameClientSubject(encoder, decoder, bufferManager, cts.Token);
 
                         var observerDisposable =
                             frameClientSubject
@@ -36,7 +37,7 @@ namespace BrainDeviceProtocol
                                     managedBuffer =>
                                     {
                                         var segment = managedBuffer.Value;
-                                        if (segment.Array != null)
+                                        if (!ReceivedDataProcessor.Instance.Process(segment) && segment.Array != null)
                                             Console.WriteLine(
                                                 "Echo: " + Encoding.UTF8.GetString(segment.Array, segment.Offset,
                                                     segment.Count));
@@ -53,16 +54,29 @@ namespace BrainDeviceProtocol
                                         cts.Cancel();
                                     });
 
+                        var cmdSender = new DevCommandSender(frameClientSubject, bufferManager);
+
                         Console.In.ToLineObservable("exit")
                             .Subscribe(
                                 line =>
                                 {
                                     if (string.IsNullOrEmpty(line)) return;
+                                    if (line == "start")
+                                    {
+                                        cmdSender.Start();
+                                        return;
+                                    }
+                                    if (line == "stop")
+                                    {
+                                        cmdSender.Stop();
+                                        return;
+                                    }
                                     var writeBuffer = Encoding.UTF8.GetBytes(line);
-                                    frameClientSubject.OnNext(DisposableValue.Create(new ArraySegment<byte>(writeBuffer), Disposable.Empty));
+                                    frameClientSubject.OnNext(
+                                        DisposableValue.Create(new ArraySegment<byte>(writeBuffer), Disposable.Empty));
                                 },
                                 error =>
-                                {                                    
+                                {
                                     Console.WriteLine("Error: " + error.Message);
                                     cts.Cancel();
                                 },
@@ -74,7 +88,7 @@ namespace BrainDeviceProtocol
 
                         cts.Token.WaitHandle.WaitOne();
                         observerDisposable.Dispose();
-                    }, 
+                    },
                     error =>
                     {
                         Console.WriteLine("Failed to connect: " + error.Message);
@@ -83,7 +97,6 @@ namespace BrainDeviceProtocol
                     cts.Token);
 
             cts.Token.WaitHandle.WaitOne();
-
         }
     }
 }
