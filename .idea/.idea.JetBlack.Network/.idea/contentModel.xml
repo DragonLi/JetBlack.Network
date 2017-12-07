@@ -186,11 +186,11 @@
       <e p="License.txt" t="Include" />
       <e p="README.md" t="Include" />
       <e p="RxSocket.EchoServer" t="IncludeRecursive">
-        <e p="EchoProtocolServerProgram.cs" t="Include" />
         <e p="Properties" t="Include">
           <e p="AssemblyInfo.cs" t="Include" />
         </e>
         <e p="RxSocket.EchoServer.csproj" t="IncludeRecursive" />
+        <e p="ServerStub.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="obj" t="ExcludeRecursive" />
       </e>

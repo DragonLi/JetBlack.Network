@@ -11,7 +11,7 @@ using JetBlack.Network.RxSocket;
 
 namespace RxSocket.EchoServer
 {
-    internal static class EchoProtocolServerProgram
+    internal static class ServerStub
     {
         private static Random _r= new Random();
         private static BufferManager bmgr = BufferManager.CreateBufferManager(64, 1024);
