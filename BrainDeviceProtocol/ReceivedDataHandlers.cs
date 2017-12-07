@@ -28,20 +28,25 @@ namespace BrainDeviceProtocol
             startIdx += 3;
             var chan3 = new ArraySegment<byte>(buf, startIdx, 3);
             startIdx += 3;
-
+            
+            Console.WriteLine($"sample data received,order:{order},ch1:{chan1.Show()},ch2:{chan2.Show()},ch3:{chan3.Show()}");
+            
             var endInd = data.Offset + count;
             var extraBlockCount = (count - leastLen + 2) / 3;
-            var extraBlocks = new List<ArraySegment<byte>>(extraBlockCount);
-            for (var i = 0; i < extraBlockCount; i++)
+            if (extraBlockCount > 0)
             {
-                if (startIdx + 3 <= endInd)
-                    extraBlocks[i] = new ArraySegment<byte>(buf, startIdx, 3);
-                else
-                    extraBlocks[i] = new ArraySegment<byte>(buf, startIdx, data.Offset + count - startIdx);
+                var extraBlocks = new List<ArraySegment<byte>>(extraBlockCount);
+                for (var i = 0; i < extraBlockCount; i++)
+                {
+                    if (startIdx + 3 <= endInd)
+                        extraBlocks[i] = new ArraySegment<byte>(buf, startIdx, 3);
+                    else
+                        extraBlocks[i] = new ArraySegment<byte>(buf, startIdx, data.Offset + count - startIdx);
 
-                startIdx += 3;
+                    startIdx += 3;
+                }
+                Console.WriteLine($"extra channel data:{extraBlocks.Show()}");
             }
-            Console.WriteLine(extraBlocks.Show());
         }
     }
 
@@ -118,6 +123,7 @@ namespace BrainDeviceProtocol
         public void Process(ArraySegment<byte> data)
         {
             //TODO
+            Console.WriteLine(data.Show());
             /*
             var count = data.Count;
             var buf = data.Array;
