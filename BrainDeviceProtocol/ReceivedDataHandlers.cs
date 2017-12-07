@@ -14,7 +14,7 @@ namespace BrainDeviceProtocol
             const int leastLen = 1 + 1 + 3 + 3 + 3;
             if (buf == null || count < leastLen)
             {
-                AppLogger.Log("corruted sample data");
+                AppLogger.Error("corruted sample data");
                 return;
             }
 
@@ -29,7 +29,7 @@ namespace BrainDeviceProtocol
             var chan3 = new ArraySegment<byte>(buf, startIdx, 3);
             startIdx += 3;
             
-            Console.WriteLine($"sample data received,order:{order},ch1:{chan1.Show()},ch2:{chan2.Show()},ch3:{chan3.Show()}");
+            AppLogger.Debug($"sample data received,order:{order},ch1:{chan1.Show()},ch2:{chan2.Show()},ch3:{chan3.Show()}");
             
             var endInd = data.Offset + count;
             var extraBlockCount = (count - leastLen + 2) / 3;
@@ -45,7 +45,7 @@ namespace BrainDeviceProtocol
 
                     startIdx += 3;
                 }
-                Console.WriteLine($"extra channel data:{extraBlocks.Show()}");
+                AppLogger.Debug($"extra channel data:{extraBlocks.Show()}");
             }
         }
     }
@@ -61,14 +61,14 @@ namespace BrainDeviceProtocol
             const int leastLen = 1 + 1;
             if (buf == null || count < leastLen)
             {
-                AppLogger.Log("corruted sample data");
+                AppLogger.Error("corruted sample data");
                 return;
             }
 
             var startIdx = data.Offset;
             var flag = buf[startIdx + 1];
             var success = flag == 0;
-            Console.WriteLine(success);
+            AppLogger.Debug(success);
         }
     }
     
@@ -83,14 +83,14 @@ namespace BrainDeviceProtocol
             const int leastLen = 1 + 1;
             if (buf == null || count < leastLen)
             {
-                AppLogger.Log("corruted sample data");
+                AppLogger.Error("corruted sample data");
                 return;
             }
 
             var startIdx = data.Offset;
             var flag = buf[startIdx + 1];
             var success = flag == 0;
-            Console.WriteLine(success);
+            AppLogger.Debug(success);
         }
     }
     
@@ -105,14 +105,14 @@ namespace BrainDeviceProtocol
             const int leastLen = 1 + 1;
             if (buf == null || count < leastLen)
             {
-                AppLogger.Log("corruted sample data");
+                AppLogger.Error("corruted sample data");
                 return;
             }
 
             var startIdx = data.Offset;
             var flag = buf[startIdx + 1];
             var success = flag == 0;
-            Console.WriteLine(success);
+            AppLogger.Debug(success);
         }
     }
     
@@ -123,7 +123,7 @@ namespace BrainDeviceProtocol
         public void Process(ArraySegment<byte> data)
         {
             //TODO
-            Console.WriteLine(data.Show());
+            AppLogger.Debug(data.Show());
             /*
             var count = data.Count;
             var buf = data.Array;
@@ -137,7 +137,7 @@ namespace BrainDeviceProtocol
             var startIdx = data.Offset;
             var flag = buf[startIdx + 1];
             var success = flag == 0;
-            Console.WriteLine(success);
+            AppLogger.Debug(success);
             */
         }
     }

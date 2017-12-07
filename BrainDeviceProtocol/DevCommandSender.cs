@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ServiceModel.Channels;
+using System.Threading;
 using JetBlack.Network.Common;
 
 namespace BrainDeviceProtocol
@@ -10,6 +11,8 @@ namespace BrainDeviceProtocol
         DevCommandEnum CmdName { get; }
         int CntSize { get; }
         byte FuncId { get; }
+        bool DontCheckResponse { get; }
+        bool ReponseHasErrorFlag { get; }
         void FillCnt(byte[] buffer, object[] args);
     }
 
@@ -29,6 +32,7 @@ namespace BrainDeviceProtocol
             
             _clientFrameSender = clientFrameSender;
             _bufMgr = bufMgr;
+            _cts = new CancellationTokenSource();
         }
 
         public void AddCommand(ICommandContent cnt)
@@ -36,7 +40,7 @@ namespace BrainDeviceProtocol
             _cmdhandler.Add(cnt.CmdName, cnt);
         }
 
-        public void ExecCmd(DevCommandEnum cmd, params object[] args)
+        /*public void ExecCmd(DevCommandEnum cmd, params object[] args)
         {
             if (!_cmdhandler.TryGetValue(cmd, out var handler))
             {
@@ -48,6 +52,6 @@ namespace BrainDeviceProtocol
             handler.FillCnt(buffer, args);
             buffer[0] = handler.FuncId;
             _clientFrameSender.OnNext(DisposableValue.Create(new ArraySegment<byte>(buffer), buf));
-        }
+        }*/
     }
 }

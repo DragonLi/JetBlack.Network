@@ -14,7 +14,13 @@ namespace BrainDeviceProtocol
         public static readonly ReceivedDataProcessor Instance = new ReceivedDataProcessor();
 
         private readonly Dictionary<byte, IReceivedDataProcessor> _processorMap;
-        
+
+        private DevCommandSender _sender;
+        public DevCommandSender Sender
+        {
+            set => _sender = value;
+        }
+
         private ReceivedDataProcessor()
         {
             _processorMap = new Dictionary<byte, IReceivedDataProcessor>();
@@ -33,23 +39,30 @@ namespace BrainDeviceProtocol
         {
             if (data.Array == null)
             {
-                AppLogger.Log("invalid data");
+                AppLogger.Error("invalid data");
                 return false;
             }
             if (data.Count <= 0)
             {
-                AppLogger.Log("invalid data");
+                AppLogger.Error("invalid data");
                 return false;
             }
 
             var funcId = data.Array[data.Offset];
             if (!_processorMap.TryGetValue(funcId, out var processor))
             {
-                AppLogger.Log($"function id not register:{funcId}");
+                AppLogger.Error($"function id not register:{funcId}");
                 return false;
             }
-            processor.Process(data);
-            return true;
+            try
+            {
+                processor.Process(data);
+                return true;
+            }
+            finally
+            {
+                _sender?.CommitResponse(data);
+            }
         }
     }
 }

@@ -52,8 +52,11 @@
   <ItemGroup>
     <Compile Include="AppLogger.cs" />
     <Compile Include="BrainDeviceClientProtocol.cs" />
+    <Compile Include="BrainDeviceManager.cs" />
     <Compile Include="BrainDevProtocolTestProgram.cs" />
+    <Compile Include="CASHelper.cs" />
     <Compile Include="CommadContent.cs" />
+    <Compile Include="CommandTask.cs" />
     <Compile Include="DevCommandSender.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReceivedDataHandlers.cs" />

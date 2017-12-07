@@ -14,7 +14,21 @@ namespace BrainDeviceProtocol
 {
     internal static class BrainDevProtocolTestProgram
     {
-        public static void Main(string[] args)
+        static void Main(string[] args)
+        {
+            //OldTest(args);
+            try
+            {
+                BrainDeviceManager.Test();
+                Console.ReadLine();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+        
+        private static void OldTest(string[] args)
         {
             var endpoint = ProgramArgs.Parse(args, new[] {"127.0.0.1:9211"}).EndPoint;
 

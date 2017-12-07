@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Threading.Tasks;
 
 namespace BrainDeviceProtocol
 {
@@ -21,6 +21,8 @@ namespace BrainDeviceProtocol
             public DevCommandEnum CmdName => DevCommandEnum.Start;
             public int CntSize => 2;
             public byte FuncId => 1;
+            public bool DontCheckResponse => false;
+            public bool ReponseHasErrorFlag => false;
 
             public void FillCnt(byte[] buffer, object[] args)
             {
@@ -28,9 +30,9 @@ namespace BrainDeviceProtocol
             }
         }
 
-        public void Start()
+        public async Task<CommandError> Start()
         {
-            ExecCmd(DevCommandEnum.Start);
+            return await ExecCmd(DevCommandEnum.Start);
         }
 
         #endregion
@@ -42,6 +44,8 @@ namespace BrainDeviceProtocol
             public DevCommandEnum CmdName => DevCommandEnum.Stop;
             public int CntSize => 2;
             public byte FuncId => 1;
+            public bool DontCheckResponse => true;
+            public bool ReponseHasErrorFlag => false;
 
             public void FillCnt(byte[] buffer, object[] args)
             {
@@ -49,9 +53,9 @@ namespace BrainDeviceProtocol
             }
         }
 
-        public void Stop()
+        public async Task<CommandError> Stop()
         {
-            ExecCmd(DevCommandEnum.Stop);
+            return await ExecCmd(DevCommandEnum.Stop);
         }
 
         #endregion
@@ -63,6 +67,8 @@ namespace BrainDeviceProtocol
             public DevCommandEnum CmdName => DevCommandEnum.SetSampleRate;
             public int CntSize => 2;
             public byte FuncId => 11;
+            public bool DontCheckResponse => false;
+            public bool ReponseHasErrorFlag => true;
 
             public void FillCnt(byte[] buffer, object[] args)
             {
@@ -82,8 +88,6 @@ namespace BrainDeviceProtocol
                     case SampleRateEnum.SPS_2k:
                         rateB = 4;
                         break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
                 }
                 buffer[1] = rateB;
             }
@@ -97,9 +101,9 @@ namespace BrainDeviceProtocol
             SPS_2k,
         }
 
-        public void SetSampleRate(SampleRateEnum sampleRate)
+        public async Task<CommandError> SetSampleRate(SampleRateEnum sampleRate)
         {
-            ExecCmd(DevCommandEnum.SetSampleRate, sampleRate);
+            return await ExecCmd(DevCommandEnum.SetSampleRate, sampleRate);
         }
 
         #endregion
@@ -111,6 +115,8 @@ namespace BrainDeviceProtocol
             public DevCommandEnum CmdName => DevCommandEnum.SetTrap;
             public int CntSize => 2;
             public byte FuncId => 12;
+            public bool DontCheckResponse => false;
+            public bool ReponseHasErrorFlag => true;
 
             public void FillCnt(byte[] buffer, object[] args)
             {
@@ -139,9 +145,9 @@ namespace BrainDeviceProtocol
             Trap_60,
         }
 
-        public void SetTrap(TrapSettingEnum trapOption)
+        public async Task<CommandError> SetTrap(TrapSettingEnum trapOption)
         {
-            ExecCmd(DevCommandEnum.SetTrap, trapOption);
+            return await ExecCmd(DevCommandEnum.SetTrap, trapOption);
         }
 
         #endregion
@@ -153,6 +159,8 @@ namespace BrainDeviceProtocol
             public DevCommandEnum CmdName => DevCommandEnum.SetFilter;
             public int CntSize => 2;
             public byte FuncId => 13;
+            public bool DontCheckResponse => false;
+            public bool ReponseHasErrorFlag => true;
 
             public void FillCnt(byte[] buffer, object[] args)
             {
@@ -161,9 +169,9 @@ namespace BrainDeviceProtocol
             }
         }
 
-        public void SetFilter(bool useFilter)
+        public async Task<CommandError> SetFilter(bool useFilter)
         {
-            ExecCmd(DevCommandEnum.SetFilter, useFilter);
+            return await ExecCmd(DevCommandEnum.SetFilter, useFilter);
         }
 
         #endregion
@@ -175,15 +183,17 @@ namespace BrainDeviceProtocol
             public DevCommandEnum CmdName => DevCommandEnum.QueryParam;
             public int CntSize => 1;
             public byte FuncId => 21;
+            public bool DontCheckResponse => false;
+            public bool ReponseHasErrorFlag => true;
 
             public void FillCnt(byte[] buffer, object[] args)
             {
             }
         }
 
-        public void QueryParam()
+        public async Task<CommandError> QueryParam()
         {
-            ExecCmd(DevCommandEnum.QueryParam);
+            return await ExecCmd(DevCommandEnum.QueryParam);
         }
 
         #endregion
